@@ -50,6 +50,11 @@ jobs:
             docker image ls
 
       - run:
+          name: Scan docker container
+          command: |
+            docker scan $DOCKER_IMAGE_NAME
+
+      - run:
           name: Upload Docker to Dockerhub
           command: |
             echo "Docker ID and Image: $DOCKER_IMAGE_NAME"
