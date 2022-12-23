@@ -251,7 +251,7 @@ workflows:
       - configure-cluster:
           requires:
             - configure-infrastructure
-            - upload-docker
+            - build-scan-upload-docker
       - deploy-docker:
           requires:
             - configure-cluster
