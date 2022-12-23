@@ -31,7 +31,7 @@ jobs:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
-  upload-docker:
+  build-scan-upload-docker:
     docker:
       - image: circleci/golang:1.15
 
@@ -42,6 +42,11 @@ jobs:
 
       - setup_remote_docker:
           version: 19.03.13
+
+      - run:
+          name: Install docker-scan-plugin
+          command: |
+            apt-get update && apt-get install docker-scan-plugin
 
       - run:
           name: Build docker container
@@ -230,7 +235,7 @@ workflows:
   default:
     jobs:
       - test-build
-      - upload-docker:
+      - build-scan-upload-docker:
           requires:
             - test-build
           filters:
