@@ -11,8 +11,10 @@ jobs:
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "requirements.txt" }}
+            # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
+      # run build
       - run:
           name: install dependencies
           command: |
@@ -20,6 +22,7 @@ jobs:
             . venv/bin/activate
             make install
 
+      # run lint
       - run:
           name: run lint
           command: |
@@ -31,7 +34,7 @@ jobs:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
-  build-scan-upload-docker:
+  upload-docker:
     docker:
       - image: circleci/golang:1.15
 
@@ -44,22 +47,10 @@ jobs:
           version: 19.03.13
 
       - run:
-          name: Install docker-scan-plugin
-          command: |
-            mkdir -p ~/.docker/cli-plugins && \
-            curl https://github.com/docker/scan-cli-plugin/releases/latest/download/docker-scan_linux_amd64 -L -s -S -o ~/.docker/cli-plugins/docker-scan &&\
-            chmod +x ~/.docker/cli-plugins/docker-scan
-
-      - run:
           name: Build docker container
           command: |
             docker build --tag=$DOCKER_IMAGE_NAME .
             docker image ls
-
-      - run:
-          name: Scan docker container
-          command: |
-            docker scan $DOCKER_IMAGE_NAME
 
       - run:
           name: Upload Docker to Dockerhub
@@ -237,7 +228,7 @@ workflows:
   default:
     jobs:
       - test-build
-      - build-scan-upload-docker:
+      - upload-docker:
           requires:
             - test-build
           filters:
@@ -253,7 +244,7 @@ workflows:
       - configure-cluster:
           requires:
             - configure-infrastructure
-            - build-scan-upload-docker
+            - upload-docker
       - deploy-docker:
           requires:
             - configure-cluster
